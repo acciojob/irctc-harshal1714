@@ -24,9 +24,32 @@ public class TrainService {
 
         //Add the train to the trainRepository
         //and route String logic to be taken from the Problem statement.
+
+        //first get the list of station for particular train from dto
+        List<Station> stationList=trainEntryDto.getStationRoute();
+        //now set route for stations ,Logic given in problem ie:"A,B,C"
+        StringBuilder route= new StringBuilder();
+        for(Station station : stationList){            //make route for all stations
+            if(route.length()==0){                    //if route length for station zero then just append its name
+                route.append(station.toString());
+            }
+            else{                                         //append comma with space with station name
+               route.append(", ").append(station.toString());
+            }
+        }
         //Save the train and return the trainId that is generated from the database.
         //Avoid using the lombok library
-        return null;
+        //now set departuretime,route,seats for a train from dto by creating its object
+        Train train=new Train();
+        train.setNoOfSeats(trainEntryDto.getNoOfSeats());
+        train.setDepartureTime(trainEntryDto.getDepartureTime());
+        train.setRoute(route.toString());
+
+        //now save this train object in repo & return its id
+
+        Train train1=trainRepository.save(train);
+
+        return train1.getTrainId();
     }
 
     public Integer calculateAvailableSeats(SeatAvailabilityEntryDto seatAvailabilityEntryDto){
@@ -40,7 +63,24 @@ public class TrainService {
         //Inshort : a train has totalNo of seats and there are tickets from and to different locations
         //We need to find out the available seats between the given 2 stations.
 
-       return null;
+        //firstly get the fromstation , tostation & trainid(int) for partucal train from dto
+        Station fromStation = seatAvailabilityEntryDto.getFromStation();
+        Station toStation = seatAvailabilityEntryDto.getToStation();
+        int trainid=seatAvailabilityEntryDto.getTrainId();
+        Train train=trainRepository.findById(trainid).get();  //now get train for that trainId & get noofseats from repo
+        int noOfSeats=train.getNoOfSeats();
+        List<Ticket>listofTickets=train.getBookedTickets();  //now get list of tickets for train from bookedticketslist
+         int countofbookedticketbetStaion=0;                //intially booked tickets zero
+        for(Ticket ticket : listofTickets){                  //check evry ticket in list fromstation to tostation &add passengerlist size into count
+            if(ticket.getFromStation().equals(fromStation) && ticket.getToStation().equals(toStation)){
+                countofbookedticketbetStaion+=ticket.getPassengersList().size();
+            }
+        }
+         //now calculate available seats
+        //ie: total seats - countofbookedtickets
+        int availableSeats=noOfSeats-countofbookedticketbetStaion;
+
+        return availableSeats;
     }
 
     public Integer calculatePeopleBoardingAtAStation(Integer trainId,Station station) throws Exception{
