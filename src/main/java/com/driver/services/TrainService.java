@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -85,13 +86,25 @@ public class TrainService {
 
     public Integer calculatePeopleBoardingAtAStation(Integer trainId,Station station) throws Exception{
 
+        Train train = trainRepository.findById(trainId).get();
+        String route = train.getRoute();
+        String[]routeArr = route.split(", ");
+        if(Arrays.stream(routeArr).noneMatch(thisRoute -> thisRoute.equals(station.name()))){
+            throw new Exception("Train is not passing from this station");
+        }
+        List<Ticket> ticketList = train.getBookedTickets();
+        int noOfPeopleBoardingAtAStation = 0;
+        for(Ticket ticket : ticketList){
+            if(ticket.getFromStation().equals(station)){
+                int noOfPeopleBoardingOnThisTicket = ticket.getPassengersList().size();
+                noOfPeopleBoardingAtAStation += noOfPeopleBoardingOnThisTicket;
+            }
+        }
+        return noOfPeopleBoardingAtAStation;
         //We need to find out the number of people who will be boarding a train from a particular station
         //if the trainId is not passing through that station
         //throw new Exception("Train is not passing from this station");
-        //  in a happy case we need to find out the number of such people.
-
-
-        return 0;
+        //in a happy case we need to find out the number of such people.
     }
 
     public Integer calculateOldestPersonTravelling(Integer trainId){
