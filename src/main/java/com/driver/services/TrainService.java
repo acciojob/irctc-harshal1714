@@ -96,11 +96,25 @@ public class TrainService {
 
     public Integer calculateOldestPersonTravelling(Integer trainId){
 
+        Train train = trainRepository.findById(trainId).get();
+        List<Ticket> ticketList = train.getBookedTickets();
+        if(ticketList.size()==0){
+            return 0;
+        }
+        int oldestAge = 0;
+        for(Ticket ticket : ticketList){
+            List<Passenger> passengerList = ticket.getPassengersList();
+            for(Passenger passenger : passengerList){
+                if(passenger.getAge()>oldestAge){
+                    oldestAge = passenger.getAge();
+                }
+            }
+        }
         //Throughout the journey of the train between any 2 stations
         //We need to find out the age of the oldest person that is travelling the train
         //If there are no people travelling in that train you can return 0
 
-        return 0;
+        return oldestAge;
     }
 
     public List<Integer> trainsBetweenAGivenTime(Station station, LocalTime startTime, LocalTime endTime){
@@ -110,8 +124,30 @@ public class TrainService {
         //You can assume that the date change doesn't need to be done ie the travel will certainly happen with the same date (More details
         //in problem statement)
         //You can also assume the seconds and milli seconds value will be 0 in a LocalTime format.
+        List<Integer> trainListBetweenGivenTime = new ArrayList<>();
 
-        return null;
+        List<Train> trainList=trainRepository.findAll();
+        for(Train train : trainList){
+            //finding route of perticular train
+            String[] route=train.getRoute().split(",");
+
+            int noOfStations =route.length-1 ;
+
+            for(String currStation : route ){
+                if(currStation.equals(station.toString())){
+                    LocalTime trainDepartureTime = train.getDepartureTime();
+                    //assuming train destination time
+                    // LocalTime trainDestinationTime = LocalTime.parse("23:59:59");
+                    LocalTime trainDestinationTime=trainDepartureTime.plusHours(noOfStations);
+                    // comparing start time and end time
+                    if(startTime.isAfter(trainDepartureTime) && endTime.isBefore(trainDestinationTime)){
+                        trainListBetweenGivenTime.add(train.getTrainId());
+                    }
+                }
+            }
+
+        }
+        return trainListBetweenGivenTime;
     }
 
 }
